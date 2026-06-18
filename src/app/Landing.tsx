@@ -149,20 +149,222 @@ function LocaleSwitcher({ locale, setLocale, onDark = false }: { locale: Locale;
     </div>
   );
 }
+/* ─── Pain Slider ─────────────────────────────────────────────────────────── */
+function PainSlider({ items, headline, closure }: { items: string[]; headline: string; closure: string }) {
+  const [active, setActive] = useState(0);
+  const [dir, setDir] = useState(1);
 
-/* ─── Dashboard Mockup ─────────────────────────────────────────────────────── */
-function DashboardMockup() {
-  const [tick, setTick] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(true);
+  const go = (next: number) => {
+    setDir(next > active ? 1 : -1);
+    setActive(next);
+  };
 
   useEffect(() => {
-    const interval = setInterval(() => setTick(v => v + 1), 2200);
-    const timeout = setTimeout(() => {
-      clearInterval(interval);
-      setIsAnimating(false);
-    }, 10000);
-    return () => { clearInterval(interval); clearTimeout(timeout); };
-  }, []);
+    const t = setInterval(() => go((active + 1) % items.length), 4000);
+    return () => clearInterval(t);
+  }, [active, items.length]);
+
+  const variants = {
+    enter: (d: number) => ({ opacity: 0, x: d * 40 }),
+    center: { opacity: 1, x: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
+    exit: (d: number) => ({ opacity: 0, x: d * -40, transition: { duration: 0.3, ease: "easeIn" } }),
+  };
+
+  return (
+    <motion.section
+      id="pain"
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "6rem 2rem" }}
+    >
+      <div style={{ maxWidth: 860, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <h2 className="tx-xl" style={{ color: TXT, margin: 0 }}>{headline}</h2>
+        </div>
+
+        {/* Slider card */}
+        <div style={{
+          position: "relative", overflow: "hidden",
+          background: `linear-gradient(140deg, ${N3} 0%, ${N} 100%)`,
+          borderRadius: 24, padding: "3rem 3.5rem",
+          boxShadow: "0 24px 64px rgba(26,58,108,0.22)",
+          minHeight: 200,
+        }}>
+          {/* Ambient glow */}
+          <div style={{ position: "absolute", top: -80, right: -80, width: 320, height: 320, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+
+          <AnimatePresence custom={dir} mode="wait">
+            <motion.div
+              key={active}
+              custom={dir}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+            >
+              <div style={{
+                fontFamily: "'DM Mono',monospace",
+                fontSize: "0.72rem", fontWeight: 600,
+                color: AMB, letterSpacing: "0.14em",
+                textTransform: "uppercase", marginBottom: "1.25rem",
+              }}>0{active + 1} / 0{items.length}</div>
+              <p style={{
+                fontSize: "clamp(1.35rem, 2.8vw, 2rem)",
+                fontWeight: 700, color: W, margin: 0,
+                lineHeight: 1.35, letterSpacing: "-0.02em",
+                maxWidth: 620,
+              }}>{items[active]}</p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Navigation dots */}
+          <div style={{ display: "flex", gap: 8, marginTop: "2.5rem", alignItems: "center" }}>
+            {items.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => go(i)}
+                aria-label={`Slide ${i + 1}`}
+                style={{
+                  height: 6,
+                  width: i === active ? 28 : 6,
+                  borderRadius: 999,
+                  background: i === active ? W : "rgba(255,255,255,0.28)",
+                  border: "none", cursor: "pointer", padding: 0,
+                  transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Closure pill */}
+        <div style={{ textAlign: "center", marginTop: "2rem" }}>
+          <div style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            background: "rgba(26,58,108,0.04)", border: `1px solid ${BDR}`,
+            borderRadius: 999, padding: "0.7rem 1.5rem",
+            fontSize: "0.9rem", color: TXT, fontWeight: 600,
+          }}>
+            <CheckCircle2 size={16} color={GRN} style={{ flexShrink: 0 }} />
+            {closure}
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+/* ─── Outcomes Comparison ──────────────────────────────────────────────────── */
+function OutcomesComparison({ outcomes, headline, label }: {
+  outcomes: { before: string; after: string }[];
+  headline: string;
+  label: string;
+}) {
+  const [activeRow, setActiveRow] = useState(0);
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 32 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+      style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "3.5rem 2rem" }}
+    >
+      <div style={{ maxWidth: 1040, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <span style={{ fontSize: "0.72rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: "0.55rem" }}>{label}</span>
+          <h2 className="tx-xl" style={{ color: TXT, margin: 0 }}>{headline}</h2>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {/* Before column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{
+              fontSize: "0.7rem", fontWeight: 800, color: AMB,
+              textTransform: "uppercase", letterSpacing: "0.1em",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              paddingBottom: "0.75rem", borderBottom: `1px solid ${BDR}`,
+            }}>
+              <AlertCircle size={12} />
+              Before Stokly
+            </div>
+            {outcomes.map((o, i) => (
+              <button
+                key={i}
+                onClick={() => setActiveRow(i)}
+                style={{
+                  textAlign: "center", cursor: "pointer",
+                  background: i === activeRow ? "rgba(226,164,77,0.07)" : BG,
+                  border: `1.5px solid ${i === activeRow ? AMB : "transparent"}`,
+                  borderRadius: 12, padding: "0.9rem 1.1rem",
+                  transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                }}
+              >
+                <div style={{
+                  width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                  background: i === activeRow ? `rgba(226,164,77,0.15)` : "rgba(115,119,131,0.08)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "background 0.25s",
+                }}>
+                  <AlertCircle size={12} color={i === activeRow ? AMB : T2} />
+                </div>
+                <span style={{
+                  fontSize: "0.88rem", fontWeight: i === activeRow ? 700 : 500,
+                  color: i === activeRow ? TXT : T2, lineHeight: 1.55,
+                  transition: "all 0.25s",
+                }}>{o.before}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* After column */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{
+              fontSize: "0.7rem", fontWeight: 800, color: GRN,
+              textTransform: "uppercase", letterSpacing: "0.1em",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+              paddingBottom: "0.75rem", borderBottom: `1px solid ${BDR}`,
+            }}>
+              <CheckCircle2 size={12} />
+              With Stokly
+            </div>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeRow}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  flex: 1,
+                  background: "linear-gradient(135deg, #EBF7F0 0%, #D6F0E2 100%)",
+                  border: `1.5px solid #BEE0CB`,
+                  borderRadius: 16, padding: "1.1rem 1.5rem",
+                  display: "flex", flexDirection: "column",
+                  alignItems: "center", justifyContent: "center",
+                  minHeight: 120,
+                  textAlign: "center",
+                }}
+              >
+                <CheckCircle2 size={22} color={GRN} style={{ marginBottom: "0.65rem" }} />
+                <p style={{
+                  fontSize: "0.95rem", color: "#1A5C35",
+                  margin: 0, lineHeight: 1.6, fontWeight: 700,
+                }}>{outcomes[activeRow]?.after}</p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
+}
+
+
+function DashboardMockup() {
 
   const stats = [
     { label: "Active Orders", value: "24", delta: "+3", color: "#3B82F6" },
@@ -245,10 +447,8 @@ function DashboardMockup() {
           {/* Stat cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 7 }}>
             {stats.map((s, i) => (
-              <motion.div
+              <div
                 key={s.label}
-                animate={isAnimating ? { scale: tick % 4 === i ? [1, 1.02, 1] : 1 } : { scale: 1 }}
-                transition={{ duration: 0.4 }}
                 style={{
                   background: W, borderRadius: 10, padding: "10px 12px",
                   border: `1px solid ${BDR}`,
@@ -265,17 +465,17 @@ function DashboardMockup() {
                   )}
                 </div>
                 <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: BG, overflow: "hidden" }}>
-                  <motion.div
-                    animate={isAnimating
-                      ? { width: ["60%", "78%", "60%"] }
-                      : { width: "70%" }}
-                    transition={isAnimating
-                      ? { duration: 3, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }
-                      : { duration: 0.6, ease: "easeOut" }}
-                    style={{ height: "100%", background: s.color, borderRadius: 2 }}
+                  <div
+                    style={{
+                      height: "100%",
+                      background: s.color,
+                      borderRadius: 2,
+                      width: ["72%", "85%", "58%", "76%"][i],
+                      transition: "width 0.6s ease",
+                    }}
                   />
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
 
@@ -290,24 +490,25 @@ function DashboardMockup() {
               <div style={{ fontSize: "0.62rem", fontWeight: 700, color: TXT }}>Stock Flow — 7 days</div>
               <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 3 }}>
                 {barHeights.map((h, i) => (
-                  <div key={i} style={{ flex: 1, display: "flex", gap: 1, alignItems: "flex-end" }}>
-                    <motion.div
-                      animate={isAnimating
-                        ? { height: [`${h * 0.8}%`, `${h}%`, `${h * 0.8}%`] }
-                        : { height: `${h}%` }}
-                      transition={isAnimating
-                        ? { duration: 2.5, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }
-                        : { duration: 0.5, ease: "easeOut" }}
-                      style={{ flex: 1, background: N, borderRadius: "3px 3px 0 0", opacity: 0.85 }}
+                  <div key={i} style={{ flex: 1, display: "flex", gap: 1, alignItems: "flex-end", height: "100%" }}>
+                    <div
+                      style={{
+                        flex: 1,
+                        background: N,
+                        borderRadius: "3px 3px 0 0",
+                        opacity: 0.85,
+                        height: `${h}%`,
+                        transition: `height 0.6s ease ${i * 0.06}s`,
+                      }}
                     />
-                    <motion.div
-                      animate={isAnimating
-                        ? { height: [`${barHeights2[i] * 0.8}%`, `${barHeights2[i]}%`, `${barHeights2[i] * 0.8}%`] }
-                        : { height: `${barHeights2[i]}%` }}
-                      transition={isAnimating
-                        ? { duration: 2.5, repeat: Infinity, delay: i * 0.1 + 0.3, ease: "easeInOut" }
-                        : { duration: 0.5, ease: "easeOut" }}
-                      style={{ flex: 1, background: `${N}40`, borderRadius: "3px 3px 0 0" }}
+                    <div
+                      style={{
+                        flex: 1,
+                        background: `${N}40`,
+                        borderRadius: "3px 3px 0 0",
+                        height: `${barHeights2[i]}%`,
+                        transition: `height 0.6s ease ${i * 0.06 + 0.15}s`,
+                      }}
                     />
                   </div>
                 ))}
@@ -332,10 +533,8 @@ function DashboardMockup() {
             }}>
               <div style={{ fontSize: "0.62rem", fontWeight: 700, color: TXT, marginBottom: 2 }}>Recent Movements</div>
               {movements.map((m, i) => (
-                <motion.div
+                <div
                   key={i}
-                  animate={isAnimating ? { opacity: tick % 3 === i ? [0.6, 1, 0.6] : 1 } : { opacity: 1 }}
-                  transition={{ duration: 1.5 }}
                   style={{
                     display: "flex", alignItems: "center", gap: 7, padding: "5px 7px",
                     background: BG, borderRadius: 7,
@@ -352,7 +551,7 @@ function DashboardMockup() {
                     <div style={{ fontSize: "0.58rem", fontWeight: 600, color: TXT, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{m.product}</div>
                     <div style={{ fontSize: "0.52rem", color: T2 }}>{m.time}</div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
@@ -402,7 +601,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
   };
 
   return (
-    <div style={{ background: BG, color: TXT, fontFamily: "'Plus Jakarta Sans', sans-serif", overflowX: "hidden" }}>
+    <div style={{ background: BG, color: TXT, fontFamily: "'Plus Jakarta Sans', sans-serif", overflowX: "hidden", paddingTop: dismissed ? 64 : 104 }}>
 
       {/* ── Announcement Bar ── */}
       <AnimatePresence>
@@ -448,14 +647,14 @@ export default function Landing({ onLogin, onRegister }: Props) {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         style={{
-          position: "sticky", top: 0, zIndex: 50,
-          background: scrolled ? "rgba(246,244,240,0.82)" : "rgba(246,244,240,0)",
-          backdropFilter: scrolled ? "blur(20px) saturate(180%)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(20px) saturate(180%)" : "none",
-          borderBottom: scrolled ? `1px solid rgba(227,224,216,0.6)` : "1px solid transparent",
-          boxShadow: scrolled ? "0 4px 24px rgba(26,58,108,0.06)" : "none",
+          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
+          background: scrolled ? "rgba(246,244,240,0.92)" : "rgba(246,244,240,0.97)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderBottom: `1px solid ${scrolled ? "rgba(227,224,216,0.7)" : "rgba(227,224,216,0.4)"}`,
+          boxShadow: scrolled ? "0 4px 24px rgba(26,58,108,0.08)" : "0 1px 0 rgba(227,224,216,0.5)",
           transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-          padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 68,
+          padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: 64,
         }}
       >
         {/* Logo */}
@@ -464,26 +663,26 @@ export default function Landing({ onLogin, onRegister }: Props) {
           <span style={{ fontWeight: 800, fontSize: "1.1rem", letterSpacing: "-0.03em", color: TXT }}>{t.appName}</span>
         </div>
 
-        {/* Nav links */}
-        <div className="landing-nav-links" style={{ display: "flex", alignItems: "center", gap: "1.75rem" }}>
-          {([
-            [t.nav.features, "#features"],
-            [t.nav.howItWorks, "#how-it-works"],
-            [t.nav.pricing, "#pricing"],
-          ] as [string, string][]).map(([label, href]) => (
-            <a
-              key={label} href={href}
-              style={{ fontSize: "0.875rem", fontWeight: 600, color: T2, textDecoration: "none", transition: "color 0.15s", letterSpacing: "-0.01em" }}
-              onMouseEnter={e => (e.currentTarget.style.color = TXT)}
-              onMouseLeave={e => (e.currentTarget.style.color = T2)}
-            >
-              {label}
-            </a>
-          ))}
-        </div>
-
-        {/* Right side */}
+        {/* Right side — nav links + locale + CTAs */}
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          {/* Nav links */}
+          <div className="landing-nav-links" style={{ display: "flex", alignItems: "center", gap: "1.75rem", marginRight: 6 }}>
+            {([
+              [t.nav.features, "#features"],
+              [t.nav.howItWorks, "#how-it-works"],
+              [t.nav.pricing, "#pricing"],
+            ] as [string, string][]).map(([label, href]) => (
+              <a
+                key={label} href={href}
+                style={{ fontSize: "0.875rem", fontWeight: 600, color: T2, textDecoration: "none", transition: "color 0.15s", letterSpacing: "-0.01em" }}
+                onMouseEnter={e => (e.currentTarget.style.color = TXT)}
+                onMouseLeave={e => (e.currentTarget.style.color = T2)}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
+
           <LocaleSwitcher locale={locale} setLocale={setLocale} />
           <div className="landing-nav-cta" style={{ display: "flex", gap: 8 }}>
             <motion.button
@@ -573,7 +772,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
       {/* ══════════════════════════════════════════════════════════════════════
           HERO
       ══════════════════════════════════════════════════════════════════════ */}
-      <section className="landing-hero" style={{ position: "relative", overflow: "hidden" }}>
+      <section className="landing-hero" style={{ position: "relative", overflow: "visible" }}>
         {/* Decorative background gradients */}
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0 }}>
           <div style={{
@@ -588,8 +787,8 @@ export default function Landing({ onLogin, onRegister }: Props) {
           }} />
         </div>
 
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "3rem 2rem 2.5rem", position: "relative", zIndex: 1 }}>
-          <div className="landing-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "3rem", alignItems: "center" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "5.5rem 2rem 4.5rem", position: "relative", zIndex: 1 }}>
+          <div className="landing-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "3.5rem", alignItems: "center" }}>
             {/* Left: Text */}
             <motion.div
               variants={stagger}
@@ -662,39 +861,39 @@ export default function Landing({ onLogin, onRegister }: Props) {
 
               {/* Floating notification badge */}
               <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", repeatType: "mirror" }}
                 style={{
-                position: "absolute", bottom: -16, left: -20, zIndex: 10,
-                background: W, borderRadius: 12, padding: "11px 16px",
+                position: "absolute", bottom: 20, left: -24, zIndex: 10,
+                background: W, borderRadius: 12, padding: "10px 14px",
                 border: `1px solid ${BDR}`,
                 boxShadow: "0 10px 32px rgba(26,58,108,0.14), 0 3px 10px rgba(0,0,0,0.05)",
                 display: "flex", alignItems: "center", gap: 10,
                 backdropFilter: "blur(12px)",
               }}
               >
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(46,125,79,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <CheckCircle2 size={20} color={GRN} />
+                <div style={{ width: 32, height: 32, borderRadius: 9, background: "rgba(46,125,79,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <CheckCircle2 size={17} color={GRN} />
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.82rem", fontWeight: 800, color: TXT, letterSpacing: "-0.01em" }}>Stock updated</div>
-                  <div style={{ fontSize: "0.72rem", color: T2, fontWeight: 500 }}>Across 3 locations</div>
+                  <div style={{ fontSize: "0.78rem", fontWeight: 800, color: TXT, letterSpacing: "-0.01em" }}>Stock updated</div>
+                  <div style={{ fontSize: "0.68rem", color: T2, fontWeight: 500 }}>Across 3 locations</div>
                 </div>
               </motion.div>
 
               {/* Floating order badge */}
               <motion.div
-                animate={{ y: [0, 6, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                animate={{ y: [0, 5, 0] }}
+                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 1.2, repeatType: "mirror" }}
                 style={{
-                position: "absolute", top: -12, right: -14, zIndex: 10,
-                background: N, borderRadius: 10, padding: "8px 14px",
+                position: "absolute", top: 16, right: -18, zIndex: 10,
+                background: N, borderRadius: 10, padding: "7px 13px",
                 boxShadow: "0 6px 20px rgba(26,58,108,0.28)",
-                display: "flex", alignItems: "center", gap: 8,
+                display: "flex", alignItems: "center", gap: 7,
               }}
               >
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#86EFAC" }} />
-                <span style={{ fontSize: "0.78rem", fontWeight: 700, color: W, letterSpacing: "-0.01em" }}>Live sync active</span>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#86EFAC" }} />
+                <span style={{ fontSize: "0.74rem", fontWeight: 700, color: W, letterSpacing: "-0.01em" }}>Live sync active</span>
               </motion.div>
             </motion.div>
           </div>
@@ -704,115 +903,59 @@ export default function Landing({ onLogin, onRegister }: Props) {
       {/* ══════════════════════════════════════════════════════════════════════
           PAIN POINTS
       ══════════════════════════════════════════════════════════════════════ */}
-      <motion.section
-        id="pain"
-        variants={stagger}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.15 }}
-        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "2.5rem 2rem" }}
-      >
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "3.5rem" }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginBottom: "1rem" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: AMB }} />
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: AMB, opacity: 0.5 }} />
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: AMB, opacity: 0.2 }} />
-            </div>
-            <h2 className="tx-xl" style={{ color: TXT, margin: "0.5rem 0 0" }}>{t.painHeadline}</h2>
-          </motion.div>
-
-          <div className="landing-pain-grid" style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "1.25rem" }}>
-            {t.painItems.map((p, i) => (
-              <motion.div
-                variants={fadeUp}
-                whileHover={{ scale: 1.02, boxShadow: "0 20px 48px rgba(26,58,108,0.2)" }}
-                key={i}
-                style={{
-                  background: `linear-gradient(135deg, ${N3} 0%, ${N} 100%)`,
-                  border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: 18, padding: "2rem",
-                  display: "flex", alignItems: "flex-start", gap: 16,
-                  boxShadow: "0 8px 28px rgba(26,58,108,0.18)",
-                  transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                  cursor: "default",
-                }}
-              >
-                <div style={{
-                  width: 36, height: 36, borderRadius: 10,
-                  background: "rgba(255,255,255,0.1)",
-                  border: "1px solid rgba(255,255,255,0.18)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0, fontSize: "0.8rem", fontWeight: 800,
-                  color: "rgba(255,255,255,0.85)", fontFamily: "'DM Mono',monospace",
-                }}>0{i + 1}</div>
-                <span style={{ fontSize: "1rem", color: "rgba(255,255,255,0.88)", lineHeight: 1.65, fontWeight: 500 }}>{p}</span>
-              </motion.div>
-            ))}
-          </div>
-
-          <motion.div variants={fadeUp} style={{ textAlign: "center", marginTop: "3rem" }}>
-            <div style={{
-              display: "inline-flex", alignItems: "center", gap: 10,
-              background: "rgba(26,58,108,0.04)", border: `1px solid ${BDR}`,
-              borderRadius: 999, padding: "0.85rem 1.75rem",
-              fontSize: "0.95rem", color: TXT, fontWeight: 600,
-            }}>
-              <CheckCircle2 size={18} color={GRN} style={{ flexShrink: 0 }} />
-              {t.painClosure}
-            </div>
-          </motion.div>
-        </div>
-      </motion.section>
+      <PainSlider items={t.painItems} headline={t.painHeadline} closure={t.painClosure} />
 
       {/* ══════════════════════════════════════════════════════════════════════
           FEATURES (BENTO GRID)
       ══════════════════════════════════════════════════════════════════════ */}
       <motion.section
         id="features"
-        variants={stagger}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.1 }}
-        style={{ padding: "5rem 2rem", maxWidth: 1160, margin: "0 auto" }}
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.05 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        style={{ padding: "3.5rem 2rem", maxWidth: 1160, margin: "0 auto" }}
       >
-        <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.featuresLabel}</span>
-          <h2 className="tx-xl" style={{ color: TXT, margin: "0.75rem 0 1rem" }}>{t.featuresHeadline}</h2>
-          <p style={{ fontSize: "1.05rem", color: T2, maxWidth: 520, margin: "0 auto", lineHeight: 1.75, fontWeight: 500 }}>{t.featuresSubtitle}</p>
-        </motion.div>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.featuresLabel}</span>
+          <h2 className="tx-xl" style={{ color: TXT, margin: "0.6rem 0 0.65rem" }}>{t.featuresHeadline}</h2>
+          <p style={{ fontSize: "0.975rem", color: T2, maxWidth: 480, margin: "0 auto", lineHeight: 1.65, fontWeight: 500 }}>{t.featuresSubtitle}</p>
+        </div>
 
-        <div className="landing-features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+        <div className="landing-features-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
           {t.features.map((f, i) => {
             const Icon = featureIcons[i];
             return (
               <motion.div
-                variants={fadeUp}
-                whileHover={{ y: -5, boxShadow: "0 24px 56px rgba(26,58,108,0.1)" }}
                 key={f.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.05 }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: i * 0.07 }}
+                whileHover={{ y: -4, boxShadow: "0 16px 40px rgba(26,58,108,0.1)" }}
                 className="feature-card"
                 style={{
-                  background: W, borderRadius: 22, padding: "2.5rem",
+                  background: W, borderRadius: 16, padding: "1.5rem",
                   border: `1px solid ${BDR}`,
-                  boxShadow: "0 2px 12px rgba(26,58,108,0.04)",
-                  display: "flex", flexDirection: "column", gap: 18,
-                  transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                  boxShadow: "0 2px 8px rgba(26,58,108,0.04)",
+                  display: "flex", flexDirection: "column", gap: 12,
+                  transition: "box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                   cursor: "default",
                   alignItems: "flex-start",
                   textAlign: "left",
                 }}
               >
                 <div style={{
-                  width: 52, height: 52, borderRadius: 14,
+                  width: 42, height: 42, borderRadius: 11,
                   background: `linear-gradient(135deg, rgba(26,58,108,0.08) 0%, rgba(26,58,108,0.04) 100%)`,
                   color: N, display: "flex", alignItems: "center", justifyContent: "center",
-                  border: "1px solid rgba(26,58,108,0.1)",
+                  border: "1px solid rgba(26,58,108,0.1)", flexShrink: 0,
                 }}>
-                  <Icon size={24} />
+                  <Icon size={20} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: TXT, margin: "0 0 0.6rem", letterSpacing: "-0.02em" }}>{f.title}</h3>
-                  <p style={{ fontSize: "0.92rem", lineHeight: 1.7, color: T2, margin: 0, fontWeight: 500 }}>{f.desc}</p>
+                  <h3 style={{ fontSize: "1rem", fontWeight: 800, color: TXT, margin: "0 0 0.4rem", letterSpacing: "-0.02em" }}>{f.title}</h3>
+                  <p style={{ fontSize: "0.875rem", lineHeight: 1.65, color: T2, margin: 0, fontWeight: 500 }}>{f.desc}</p>
                 </div>
               </motion.div>
             );
@@ -823,92 +966,74 @@ export default function Landing({ onLogin, onRegister }: Props) {
       {/* ══════════════════════════════════════════════════════════════════════
           OUTCOMES — 3D FLIP CARDS
       ══════════════════════════════════════════════════════════════════════ */}
-      <motion.section
-        variants={stagger}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.1 }}
-        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "4.5rem 2rem" }}
-      >
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: "0.75rem" }}>{t.outcomesLabel}</span>
-            <h2 className="tx-xl" style={{ color: TXT, margin: 0 }}>{t.outcomesHeadline}</h2>
-          </motion.div>
-
-          <div className="outcome-flip-grid">
-            {t.outcomes.map((o, i) => (
-              <motion.div variants={fadeUp} key={i} className="flip-card" tabIndex={0}>
-                <div className="flip-card-inner">
-                  <div className="flip-card-front">
-                    <AlertCircle size={22} color={AMB} style={{ marginBottom: "1rem", flexShrink: 0 }} />
-                    <p style={{ fontSize: "0.98rem", color: TXT, fontWeight: 600, margin: 0, lineHeight: 1.65 }}>{o.before}</p>
-                    <div className="outcome-hint">Hover <ArrowRight size={11} /></div>
-                  </div>
-                  <div className="flip-card-back">
-                    <CheckCircle2 size={28} color={GRN} style={{ marginBottom: "1rem", flexShrink: 0 }} />
-                    <p style={{ fontSize: "0.98rem", color: "#1A5C35", margin: 0, lineHeight: 1.65, fontWeight: 700 }}>{o.after}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </motion.section>
+      <OutcomesComparison outcomes={t.outcomes} headline={t.outcomesHeadline} label={t.outcomesLabel} />
 
       {/* ══════════════════════════════════════════════════════════════════════
           HOW IT WORKS
       ══════════════════════════════════════════════════════════════════════ */}
       <motion.section
         id="how-it-works"
-        variants={stagger}
-        initial="hidden"
-        whileInView="show"
-        viewport={{ once: true, amount: 0.1 }}
-        style={{ padding: "5rem 2rem", maxWidth: 1120, margin: "0 auto" }}
+        initial={{ opacity: 0, y: 32 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.05 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        style={{ padding: "3.5rem 2rem", maxWidth: 1120, margin: "0 auto" }}
       >
-        <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.howLabel}</span>
-          <h2 className="tx-xl" style={{ color: TXT, margin: "0.75rem 0 0" }}>{t.howHeadline}</h2>
-        </motion.div>
+        <div style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.howLabel}</span>
+          <h2 className="tx-xl" style={{ color: TXT, margin: "0.6rem 0 0" }}>{t.howHeadline}</h2>
+        </div>
 
-        <div className="landing-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "3rem", position: "relative" }}>
-          {/* Connector line (desktop) */}
-          <div className="landing-how-connector" style={{
-            position: "absolute", top: 22, left: "calc(16.66% + 22px)", right: "calc(16.66% + 22px)",
-            height: 2, borderTop: `2px dashed ${BDR}`, zIndex: 0,
-          }} />
-
+        {/* Steps using flex so connector lines are perfectly centred on circles */}
+        <div style={{ display: "flex", alignItems: "flex-start" }}>
           {t.steps.map((s, i) => (
-            <motion.div variants={fadeUp} key={i} style={{ position: "relative", zIndex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: "1.5rem" }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: "50%",
-                  background: N, flexShrink: 0,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.9rem", fontWeight: 800, color: W,
-                  boxShadow: "0 8px 20px rgba(26,58,108,0.25)",
-                  fontFamily: "'DM Mono',monospace",
-                }}>
-                  {i + 1}
+            <React.Fragment key={i}>
+              <motion.div
+                style={{ flex: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.05 }}
+                transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: i * 0.12 }}
+              >
+                <div style={{ marginBottom: "1.25rem" }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: "50%",
+                    background: N, flexShrink: 0,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.9rem", fontWeight: 800, color: W,
+                    boxShadow: "0 6px 18px rgba(26,58,108,0.25)",
+                    fontFamily: "'DM Mono',monospace",
+                  }}>
+                    {i + 1}
+                  </div>
                 </div>
-              </div>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: 800, color: TXT, margin: "0 0 0.7rem", letterSpacing: "-0.02em" }}>{s.title}</h3>
-              <p style={{ fontSize: "0.95rem", lineHeight: 1.75, color: T2, margin: 0, fontWeight: 500 }}>{s.desc}</p>
-            </motion.div>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: TXT, margin: "0 0 0.5rem", letterSpacing: "-0.02em" }}>{s.title}</h3>
+                <p style={{ fontSize: "0.875rem", lineHeight: 1.7, color: T2, margin: 0, fontWeight: 500, paddingRight: i < t.steps.length - 1 ? "1.5rem" : 0 }}>{s.desc}</p>
+              </motion.div>
+              {i < t.steps.length - 1 && (
+                <div style={{
+                  flexShrink: 0,
+                  width: 40,
+                  paddingTop: 22,   /* half of 44px = vertical centre of circle */
+                  display: "flex", alignItems: "flex-start",
+                }}>
+                  <div style={{ width: "100%", borderTop: `2px dashed ${BDR}` }} />
+                </div>
+              )}
+            </React.Fragment>
           ))}
         </div>
 
-        <motion.div variants={fadeUp} style={{ textAlign: "center", marginTop: "4rem" }}>
+        <div style={{ textAlign: "center", marginTop: "3rem" }}>
           <motion.button
             whileHover={{ backgroundColor: N2, y: -2, boxShadow: "0 10px 30px rgba(26,58,108,0.28)" }}
             whileTap={{ scale: 0.97 }}
             onClick={onRegister}
-            style={{ ...btnPrimary, padding: "15px 32px", fontSize: "0.975rem" }}
+            style={{ ...btnPrimary, padding: "13px 28px", fontSize: "0.95rem" }}
           >
             {t.howCta} <ArrowRight size={16} />
           </motion.button>
-        </motion.div>
+        </div>
       </motion.section>
 
       {/* ══════════════════════════════════════════════════════════════════════
@@ -931,11 +1056,11 @@ export default function Landing({ onLogin, onRegister }: Props) {
           <motion.div variants={fadeUp} style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
             {channels.map(name => (
               <motion.div
-                whileHover={{ scale: 1.04, borderColor: N, color: N, boxShadow: "0 4px 16px rgba(26,58,108,0.1)" }}
+                whileHover={{ scale: 1.04, borderColor: N, color: N, boxShadow: "0 4px 12px rgba(26,58,108,0.1)" }}
                 key={name}
                 style={{
-                  borderRadius: 10, padding: "11px 24px",
-                  fontSize: "0.9rem", fontWeight: 700, color: T2,
+                  borderRadius: 8, padding: "7px 16px",
+                  fontSize: "0.82rem", fontWeight: 700, color: T2,
                   border: `1.5px solid ${BDR}`,
                   background: W, cursor: "default",
                   transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
@@ -958,40 +1083,40 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.1 }}
-        style={{ padding: "5rem 2rem", maxWidth: 980, margin: "0 auto" }}
+        style={{ padding: "3.5rem 2rem", maxWidth: 860, margin: "0 auto" }}
       >
-        <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "4rem" }}>
-          <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.pricingLabel}</span>
-          <h2 className="tx-xl" style={{ color: TXT, margin: "0.75rem 0 1rem" }}>{t.pricingHeadline}</h2>
-          <p style={{ fontSize: "1.05rem", color: T2, fontWeight: 500 }}>{t.pricingSubtitle}</p>
+        <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.pricingLabel}</span>
+          <h2 className="tx-xl" style={{ color: TXT, margin: "0.6rem 0 0.65rem" }}>{t.pricingHeadline}</h2>
+          <p style={{ fontSize: "0.975rem", color: T2, fontWeight: 500 }}>{t.pricingSubtitle}</p>
         </motion.div>
 
-        <div className="landing-pricing-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div className="landing-pricing-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
           {/* Free */}
           <motion.div
             variants={fadeUp}
             whileHover={{ y: -3 }}
             style={{
-              background: W, borderRadius: 20, padding: "2.75rem",
+              background: W, borderRadius: 16, padding: "2rem",
               border: `1.5px solid ${BDR}`,
-              boxShadow: "0 2px 16px rgba(26,58,108,0.04)",
+              boxShadow: "0 2px 12px rgba(26,58,108,0.04)",
               transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            <div style={{ fontSize: "0.78rem", fontWeight: 800, color: T2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.5rem" }}>{t.freePlanLabel}</div>
-            <div style={{ fontSize: "3.75rem", fontWeight: 800, letterSpacing: "-0.04em", color: TXT, lineHeight: 1, marginBottom: "0.5rem" }}>€0</div>
-            <div style={{ fontSize: "0.9rem", color: T2, marginBottom: "2.25rem", paddingBottom: "2.25rem", borderBottom: `1px solid ${BDR}`, fontWeight: 500 }}>{t.freePlanNote}</div>
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: T2, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>{t.freePlanLabel}</div>
+            <div style={{ fontSize: "2.85rem", fontWeight: 800, letterSpacing: "-0.04em", color: TXT, lineHeight: 1, marginBottom: "0.4rem" }}>€0</div>
+            <div style={{ fontSize: "0.85rem", color: T2, marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: `1px solid ${BDR}`, fontWeight: 500 }}>{t.freePlanNote}</div>
             {t.freePlanItems.map(f => (
-              <div key={f} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <CheckCircle size={16} color={GRN} />
-                <span style={{ fontSize: "0.95rem", color: TXT, fontWeight: 500 }}>{f}</span>
+              <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                <CheckCircle size={14} color={GRN} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: "0.875rem", color: TXT, fontWeight: 500 }}>{f}</span>
               </div>
             ))}
             <motion.button
               whileHover={{ backgroundColor: BG, borderColor: N }}
               whileTap={{ scale: 0.98 }}
               onClick={onRegister}
-              style={{ ...btnGhost, width: "100%", justifyContent: "center", marginTop: "2rem", padding: "14px", fontSize: "0.975rem" }}
+              style={{ ...btnGhost, width: "100%", justifyContent: "center", marginTop: "1.5rem", padding: "12px", fontSize: "0.9rem" }}
             >
               {t.freePlanCta}
             </motion.button>
@@ -1000,29 +1125,28 @@ export default function Landing({ onLogin, onRegister }: Props) {
           {/* Pro */}
           <motion.div
             variants={fadeUp}
-            whileHover={{ y: -3, boxShadow: "0 32px 72px rgba(26,58,108,0.32)" }}
+            whileHover={{ y: -3, boxShadow: "0 24px 60px rgba(26,58,108,0.32)" }}
             style={{
               background: `linear-gradient(150deg, ${N3} 0%, ${N} 60%, #1E4A7E 100%)`,
-              borderRadius: 20, padding: "2.75rem", position: "relative", overflow: "hidden",
-              boxShadow: "0 16px 48px rgba(26,58,108,0.28)",
+              borderRadius: 16, padding: "2rem", position: "relative", overflow: "hidden",
+              boxShadow: "0 12px 40px rgba(26,58,108,0.28)",
               transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
             }}
           >
-            {/* Subtle radial glow */}
-            <div style={{ position: "absolute", top: -60, right: -60, width: 240, height: 240, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
+            <div style={{ position: "absolute", top: -50, right: -50, width: 200, height: 200, borderRadius: "50%", background: "rgba(255,255,255,0.04)", pointerEvents: "none" }} />
 
-            <div style={{ position: "absolute", top: 20, right: 20, background: AMB, color: "#0B0907", fontSize: "0.7rem", fontWeight: 800, padding: "4px 12px", borderRadius: 6, letterSpacing: "0.05em" }}>
+            <div style={{ position: "absolute", top: 16, right: 16, background: AMB, color: "#0B0907", fontSize: "0.65rem", fontWeight: 800, padding: "3px 10px", borderRadius: 5, letterSpacing: "0.05em" }}>
               {t.proBadge}
             </div>
-            <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1.5rem" }}>{t.proPlanLabel}</div>
-            <div style={{ fontSize: "3.75rem", fontWeight: 800, letterSpacing: "-0.04em", color: W, lineHeight: 1, marginBottom: "0.5rem" }}>
-              €29<span style={{ fontSize: "1.35rem", fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>/mo</span>
+            <div style={{ fontSize: "0.72rem", fontWeight: 800, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem" }}>{t.proPlanLabel}</div>
+            <div style={{ fontSize: "2.85rem", fontWeight: 800, letterSpacing: "-0.04em", color: W, lineHeight: 1, marginBottom: "0.4rem" }}>
+              €29<span style={{ fontSize: "1.1rem", fontWeight: 600, color: "rgba(255,255,255,0.4)" }}>/mo</span>
             </div>
-            <div style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.55)", marginBottom: "2.25rem", paddingBottom: "2.25rem", borderBottom: "1px solid rgba(255,255,255,0.12)", fontWeight: 500 }}>{t.proPlanNote}</div>
+            <div style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.55)", marginBottom: "1.5rem", paddingBottom: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.12)", fontWeight: 500 }}>{t.proPlanNote}</div>
             {t.proPlanItems.map(f => (
-              <div key={f} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <CheckCircle size={16} color="#86EFAC" />
-                <span style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.88)", fontWeight: 500 }}>{f}</span>
+              <div key={f} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                <CheckCircle size={14} color="#86EFAC" style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.88)", fontWeight: 500 }}>{f}</span>
               </div>
             ))}
             <motion.button
@@ -1030,9 +1154,9 @@ export default function Landing({ onLogin, onRegister }: Props) {
               whileTap={{ scale: 0.98 }}
               onClick={onRegister}
               style={{
-                width: "100%", marginTop: "2rem", padding: "14px",
+                width: "100%", marginTop: "1.5rem", padding: "12px",
                 background: W, color: N, border: "none", borderRadius: 10,
-                fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "0.975rem",
+                fontFamily: "'Plus Jakarta Sans',sans-serif", fontWeight: 800, fontSize: "0.9rem",
                 cursor: "pointer", boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
               }}
             >
@@ -1045,13 +1169,13 @@ export default function Landing({ onLogin, onRegister }: Props) {
         <motion.div
           variants={fadeUp}
           style={{
-            borderRadius: 14, padding: "1.35rem 1.75rem", marginTop: 20,
-            display: "flex", alignItems: "flex-start", gap: 14,
+            borderRadius: 12, padding: "1.1rem 1.5rem", marginTop: 14,
+            display: "flex", alignItems: "flex-start", gap: 12,
             background: W, border: `1px solid ${BDR}`,
           }}
         >
-          <CheckCircle size={18} color={GRN} style={{ flexShrink: 0, marginTop: 2 }} />
-          <p style={{ fontSize: "0.9rem", color: TXT, margin: 0, lineHeight: 1.7, fontWeight: 600 }}>{t.migrationNote}</p>
+          <CheckCircle size={16} color={GRN} style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontSize: "0.875rem", color: TXT, margin: 0, lineHeight: 1.65, fontWeight: 600 }}>{t.migrationNote}</p>
         </motion.div>
       </motion.section>
 
