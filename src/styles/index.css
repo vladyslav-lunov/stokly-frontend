@@ -259,20 +259,20 @@
 
   /* Typography Scale */
   .tx-xxl {
-    font-size: clamp(2.75rem, 7vw, 5rem);
-    line-height: 1.06;
+    font-size: clamp(2rem, 4.5vw, 3.75rem);
+    line-height: 1.08;
     letter-spacing: -0.04em;
     font-weight: 800;
   }
   .tx-xl {
-    font-size: clamp(2.2rem, 5.5vw, 3.75rem);
-    line-height: 1.1;
+    font-size: clamp(1.85rem, 4vw, 3rem);
+    line-height: 1.12;
     letter-spacing: -0.03em;
     font-weight: 700;
   }
   .tx-l {
-    font-size: clamp(1.75rem, 4vw, 2.75rem);
-    line-height: 1.15;
+    font-size: clamp(1.5rem, 3vw, 2.25rem);
+    line-height: 1.18;
     letter-spacing: -0.02em;
     font-weight: 700;
   }

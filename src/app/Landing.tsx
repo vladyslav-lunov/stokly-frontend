@@ -153,9 +153,15 @@ function LocaleSwitcher({ locale, setLocale, onDark = false }: { locale: Locale;
 /* ─── Dashboard Mockup ─────────────────────────────────────────────────────── */
 function DashboardMockup() {
   const [tick, setTick] = useState(0);
+  const [isAnimating, setIsAnimating] = useState(true);
+
   useEffect(() => {
-    const t = setInterval(() => setTick(v => v + 1), 2200);
-    return () => clearInterval(t);
+    const interval = setInterval(() => setTick(v => v + 1), 2200);
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+      setIsAnimating(false);
+    }, 10000);
+    return () => { clearInterval(interval); clearTimeout(timeout); };
   }, []);
 
   const stats = [
@@ -200,7 +206,7 @@ function DashboardMockup() {
         </div>
       </div>
 
-      <div style={{ display: "flex", height: 420 }}>
+      <div style={{ display: "flex", height: 360 }}>
         {/* Sidebar */}
         <div style={{
           width: 52, background: N3, display: "flex", flexDirection: "column",
@@ -241,7 +247,7 @@ function DashboardMockup() {
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
-                animate={{ scale: tick % 4 === i ? [1, 1.02, 1] : 1 }}
+                animate={isAnimating ? { scale: tick % 4 === i ? [1, 1.02, 1] : 1 } : { scale: 1 }}
                 transition={{ duration: 0.4 }}
                 style={{
                   background: W, borderRadius: 10, padding: "10px 12px",
@@ -260,8 +266,12 @@ function DashboardMockup() {
                 </div>
                 <div style={{ marginTop: 6, height: 3, borderRadius: 2, background: BG, overflow: "hidden" }}>
                   <motion.div
-                    animate={{ width: ["60%", "78%", "60%"] }}
-                    transition={{ duration: 3, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }}
+                    animate={isAnimating
+                      ? { width: ["60%", "78%", "60%"] }
+                      : { width: "70%" }}
+                    transition={isAnimating
+                      ? { duration: 3, repeat: Infinity, delay: i * 0.5, ease: "easeInOut" }
+                      : { duration: 0.6, ease: "easeOut" }}
                     style={{ height: "100%", background: s.color, borderRadius: 2 }}
                   />
                 </div>
@@ -282,13 +292,21 @@ function DashboardMockup() {
                 {barHeights.map((h, i) => (
                   <div key={i} style={{ flex: 1, display: "flex", gap: 1, alignItems: "flex-end" }}>
                     <motion.div
-                      animate={{ height: [`${h * 0.8}%`, `${h}%`, `${h * 0.8}%`] }}
-                      transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }}
+                      animate={isAnimating
+                        ? { height: [`${h * 0.8}%`, `${h}%`, `${h * 0.8}%`] }
+                        : { height: `${h}%` }}
+                      transition={isAnimating
+                        ? { duration: 2.5, repeat: Infinity, delay: i * 0.1, ease: "easeInOut" }
+                        : { duration: 0.5, ease: "easeOut" }}
                       style={{ flex: 1, background: N, borderRadius: "3px 3px 0 0", opacity: 0.85 }}
                     />
                     <motion.div
-                      animate={{ height: [`${barHeights2[i] * 0.8}%`, `${barHeights2[i]}%`, `${barHeights2[i] * 0.8}%`] }}
-                      transition={{ duration: 2.5, repeat: Infinity, delay: i * 0.1 + 0.3, ease: "easeInOut" }}
+                      animate={isAnimating
+                        ? { height: [`${barHeights2[i] * 0.8}%`, `${barHeights2[i]}%`, `${barHeights2[i] * 0.8}%`] }
+                        : { height: `${barHeights2[i]}%` }}
+                      transition={isAnimating
+                        ? { duration: 2.5, repeat: Infinity, delay: i * 0.1 + 0.3, ease: "easeInOut" }
+                        : { duration: 0.5, ease: "easeOut" }}
                       style={{ flex: 1, background: `${N}40`, borderRadius: "3px 3px 0 0" }}
                     />
                   </div>
@@ -316,7 +334,7 @@ function DashboardMockup() {
               {movements.map((m, i) => (
                 <motion.div
                   key={i}
-                  animate={{ opacity: tick % 3 === i ? [0.6, 1, 0.6] : 1 }}
+                  animate={isAnimating ? { opacity: tick % 3 === i ? [0.6, 1, 0.6] : 1 } : { opacity: 1 }}
                   transition={{ duration: 1.5 }}
                   style={{
                     display: "flex", alignItems: "center", gap: 7, padding: "5px 7px",
@@ -343,6 +361,7 @@ function DashboardMockup() {
     </div>
   );
 }
+
 
 /* ─── Main Landing ─────────────────────────────────────────────────────────── */
 export default function Landing({ onLogin, onRegister }: Props) {
@@ -569,8 +588,8 @@ export default function Landing({ onLogin, onRegister }: Props) {
           }} />
         </div>
 
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "7rem 2rem 5rem", position: "relative", zIndex: 1 }}>
-          <div className="landing-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "5rem", alignItems: "center" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "3rem 2rem 2.5rem", position: "relative", zIndex: 1 }}>
+          <div className="landing-hero-grid" style={{ display: "grid", gridTemplateColumns: "1.05fr 0.95fr", gap: "3rem", alignItems: "center" }}>
             {/* Left: Text */}
             <motion.div
               variants={stagger}
@@ -581,32 +600,32 @@ export default function Landing({ onLogin, onRegister }: Props) {
               <motion.div variants={fadeUp} style={{
                 display: "inline-flex", alignItems: "center", gap: 7,
                 background: "#FEF9EE", border: "1px solid #F6D87A",
-                borderRadius: 8, padding: "7px 14px", marginBottom: "1.75rem",
+                borderRadius: 8, padding: "6px 12px", marginBottom: "0.75rem",
               }}>
                 <Clock size={13} color="#B45309" />
                 <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#92400E", letterSpacing: "0.01em" }}>{t.heroBadge}</span>
               </motion.div>
 
               {/* Headline */}
-              <motion.h1 variants={fadeUp} className="tx-xxl" style={{ color: TXT, margin: "0 0 1.5rem", lineHeight: 1.05 }}>
+              <motion.h1 variants={fadeUp} className="tx-xxl" style={{ color: TXT, margin: "0 0 0.85rem", lineHeight: 1.05 }}>
                 {t.heroHeadline}
               </motion.h1>
 
               {/* Subtitle */}
               <motion.p variants={fadeUp} style={{
-                fontSize: "1.1rem", lineHeight: 1.8, color: T2, maxWidth: 500,
-                margin: "0 0 2.25rem", fontWeight: 500,
+                fontSize: "1rem", lineHeight: 1.7, color: T2, maxWidth: 500,
+                margin: "0 0 1.5rem", fontWeight: 500,
               }}>
                 {t.heroSubtitle}
               </motion.p>
 
               {/* CTAs */}
-              <motion.div variants={fadeUp} style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: "2rem" }}>
+              <motion.div variants={fadeUp} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: "1.25rem" }}>
                 <motion.button
                   whileHover={{ backgroundColor: N2, boxShadow: "0 10px 30px rgba(26,58,108,0.3)", y: -1 }}
                   whileTap={{ scale: 0.97 }}
                   onClick={onRegister}
-                  style={{ ...btnPrimary, padding: "15px 30px", fontSize: "0.975rem" }}
+                  style={{ ...btnPrimary, padding: "13px 26px", fontSize: "0.93rem" }}
                 >
                   {t.heroCta} <ArrowRight size={16} />
                 </motion.button>
@@ -646,13 +665,13 @@ export default function Landing({ onLogin, onRegister }: Props) {
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
                 style={{
-                  position: "absolute", bottom: -20, left: -28, zIndex: 10,
-                  background: W, borderRadius: 14, padding: "14px 18px",
-                  border: `1px solid ${BDR}`,
-                  boxShadow: "0 12px 40px rgba(26,58,108,0.15), 0 3px 12px rgba(0,0,0,0.06)",
-                  display: "flex", alignItems: "center", gap: 12,
-                  backdropFilter: "blur(12px)",
-                }}
+                position: "absolute", bottom: -16, left: -20, zIndex: 10,
+                background: W, borderRadius: 12, padding: "11px 16px",
+                border: `1px solid ${BDR}`,
+                boxShadow: "0 10px 32px rgba(26,58,108,0.14), 0 3px 10px rgba(0,0,0,0.05)",
+                display: "flex", alignItems: "center", gap: 10,
+                backdropFilter: "blur(12px)",
+              }}
               >
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(46,125,79,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <CheckCircle2 size={20} color={GRN} />
@@ -668,11 +687,11 @@ export default function Landing({ onLogin, onRegister }: Props) {
                 animate={{ y: [0, 6, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
                 style={{
-                  position: "absolute", top: -16, right: -20, zIndex: 10,
-                  background: N, borderRadius: 12, padding: "10px 16px",
-                  boxShadow: "0 8px 24px rgba(26,58,108,0.3)",
-                  display: "flex", alignItems: "center", gap: 9,
-                }}
+                position: "absolute", top: -12, right: -14, zIndex: 10,
+                background: N, borderRadius: 10, padding: "8px 14px",
+                boxShadow: "0 6px 20px rgba(26,58,108,0.28)",
+                display: "flex", alignItems: "center", gap: 8,
+              }}
               >
                 <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#86EFAC" }} />
                 <span style={{ fontSize: "0.78rem", fontWeight: 700, color: W, letterSpacing: "-0.01em" }}>Live sync active</span>
@@ -691,7 +710,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.15 }}
-        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "6rem 2rem" }}
+        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "2.5rem 2rem" }}
       >
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
           <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "3.5rem" }}>
@@ -755,7 +774,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.1 }}
-        style={{ padding: "8rem 2rem", maxWidth: 1160, margin: "0 auto" }}
+        style={{ padding: "5rem 2rem", maxWidth: 1160, margin: "0 auto" }}
       >
         <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "4rem" }}>
           <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.featuresLabel}</span>
@@ -809,10 +828,10 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.1 }}
-        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "7rem 2rem" }}
+        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "4.5rem 2rem" }}
       >
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-          <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "4rem" }}>
+          <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase", display: "block", marginBottom: "0.75rem" }}>{t.outcomesLabel}</span>
             <h2 className="tx-xl" style={{ color: TXT, margin: 0 }}>{t.outcomesHeadline}</h2>
           </motion.div>
@@ -846,9 +865,9 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.1 }}
-        style={{ padding: "8rem 2rem", maxWidth: 1120, margin: "0 auto" }}
+        style={{ padding: "5rem 2rem", maxWidth: 1120, margin: "0 auto" }}
       >
-        <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "4.5rem" }}>
+        <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "3rem" }}>
           <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.howLabel}</span>
           <h2 className="tx-xl" style={{ color: TXT, margin: "0.75rem 0 0" }}>{t.howHeadline}</h2>
         </motion.div>
@@ -900,7 +919,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.4 }}
-        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "4rem 2rem" }}
+        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "2.5rem 2rem" }}
       >
         <div style={{ maxWidth: 1120, margin: "0 auto", textAlign: "center" }}>
           <motion.p variants={fadeUp} style={{
@@ -939,7 +958,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.1 }}
-        style={{ padding: "8rem 2rem", maxWidth: 980, margin: "0 auto" }}
+        style={{ padding: "5rem 2rem", maxWidth: 980, margin: "0 auto" }}
       >
         <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "4rem" }}>
           <span style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.pricingLabel}</span>
@@ -1044,7 +1063,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
         initial="hidden"
         whileInView="show"
         viewport={{ once: true, amount: 0.4 }}
-        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "6rem 2rem" }}
+        style={{ background: W, borderTop: `1px solid ${BDR}`, borderBottom: `1px solid ${BDR}`, padding: "2.5rem 2rem" }}
       >
         <div style={{ maxWidth: 680, margin: "0 auto", textAlign: "center" }}>
           <motion.span variants={fadeUp} style={{ fontSize: "0.78rem", fontWeight: 800, color: N, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t.ossLabel}</motion.span>
@@ -1079,7 +1098,7 @@ export default function Landing({ onLogin, onRegister }: Props) {
         viewport={{ once: true, amount: 0.4 }}
         style={{
           background: `linear-gradient(150deg, ${N3} 0%, ${N} 55%, #1A4880 100%)`,
-          padding: "8rem 2rem", textAlign: "center", position: "relative", overflow: "hidden",
+          padding: "5.5rem 2rem", textAlign: "center", position: "relative", overflow: "hidden",
         }}
       >
         {/* Decorative glows */}
